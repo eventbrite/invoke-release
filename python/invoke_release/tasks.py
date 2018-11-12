@@ -1096,8 +1096,10 @@ def branch(_, verbose=False, no_stash=False):
     'verbose': 'Specify this switch to include verbose debug information in the command output.',
     'no-stash': 'Specify this switch to disable stashing any uncommitted changes (by default, changes that have '
                 'not been committed are stashed before the release is executed).',
+    'any-branch': 'Specify this switch to be able to tag a release from any branch (i.e. not master nor version '
+                'branches).',
 })
-def release(_, verbose=False, no_stash=False):
+def release(_, verbose=False, no_stash=False, any_branch=False):
     """
     Increases the version, adds a changelog message, and tags a new version of this project.
     """
@@ -1112,24 +1114,36 @@ def release(_, verbose=False, no_stash=False):
 
     branch_name = _get_branch_name(verbose)
     if branch_name != BRANCH_MASTER:
-        if not RE_VERSION_BRANCH_MAJOR.match(branch_name) and not RE_VERSION_BRANCH_MINOR.match(branch_name):
+        if RE_VERSION_BRANCH_MAJOR.match(branch_name) or RE_VERSION_BRANCH_MINOR.match(branch_name):
+            instruction = _prompt(
+                'You are currently on branch "{branch}" instead of "master." Are you sure you want to continue '
+                'releasing from "{branch}?" You should only do this from version branches, and only when higher '
+                'versions have been released from the parent branch. (y/N):',
+                branch=branch_name,
+            ).lower()
+
+            if instruction != INSTRUCTION_YES:
+                _standard_output('Canceling release!')
+                return
+
+        elif any_branch:
+            instruction = _prompt(
+                'You are on branch "{branch}". This branch is neither "master" or a version branch so you should be '
+                'extra careful about this.\nAre you sure you want to continue releasing a version from branch '
+                '"{branch}"? (y/N):',
+                branch=branch_name,
+            ).lower()
+
+            if instruction != INSTRUCTION_YES:
+                _standard_output('Canceling release!')
+                return
+        else:
             _error_output(
-                'You are currently on branch "{}" instead of "master." You should only release from master or version '
-                'branches, and this does not appear to be a version branch (must match \\d+\\.x\\.x or \\d+.\\d+\\.x). '
-                '\nCanceling release!',
+                'You are currently on branch "{}" instead of "master." You should only release from master or '
+                'version branches, and this does not appear to be a version branch '
+                '(must match \\d+\\.x\\.x or \\d+.\\d+\\.x). \nCanceling release!',
                 branch_name,
             )
-            return
-
-        instruction = _prompt(
-            'You are currently on branch "{branch}" instead of "master." Are you sure you want to continue releasing '
-            'from "{branch}?" You should only do this from version branches, and only when higher versions have been '
-            'released from the parent branch. (y/N):',
-            branch=branch_name,
-        ).lower()
-
-        if instruction != INSTRUCTION_YES:
-            _standard_output('Canceling release!')
             return
 
         version_regular_expression = re.compile(
