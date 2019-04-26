@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tempfile
 import shlex
-from distutils.version import LooseVersion
+from distutils.version import StrictVersion
 
 from invoke import task
 import six
@@ -1051,7 +1051,7 @@ def branch(_, verbose=False, no_stash=False):
         if branch_version not in tags:
             raise ReleaseFailure('Version number {} not in the list of available tags.'.format(branch_version))
 
-        _v = LooseVersion(branch_version)
+        _v = StrictVersion(branch_version)
         minor_branch = '.'.join(list(map(six.text_type, _v.version[:2])) + ['x'])
         major_branch = '.'.join(list(map(six.text_type, _v.version[:1])) + ['x', 'x'])
 
@@ -1172,7 +1172,7 @@ def release(_, verbose=False, no_stash=False):
             filter(None, ['.'.join(map(six.text_type, version_info[:3])), (version_info[3:] or [None])[0]])
         )  # This must match the code in VERSION_VARIABLE_TEMPLATE at the top of this file
 
-        if not (LooseVersion(release_version) > LooseVersion(__version__)):
+        if not (StrictVersion(release_version) > StrictVersion(__version__)):
             raise ReleaseFailure(
                 'New version number {new_version} is not greater than current version {old_version}.'.format(
                     new_version=release_version,
