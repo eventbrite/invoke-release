@@ -615,7 +615,7 @@ def _push_release_changes(release_version, branch_name, verbose):
             _delete_last_commit(verbose)
 
         if USE_TAG:
-            _delete_local_tag(tag, verbose)
+            _delete_local_tag(release_version, verbose)
 
         _verbose_output(verbose, 'Finished rolling back local release commit.')
 
@@ -625,12 +625,13 @@ def _push_release_changes(release_version, branch_name, verbose):
         if USE_TAG:
             _print_output(
                 COLOR_RED_BOLD,
-                'Make sure you remember to explicitly push {branch} and the tag (or revert your local changes if you are '
-                'trying to cancel)! You can push with the following commands:\n'
+                'Make sure you remember to explicitly push {branch} and the tag '
+                '(or revert your local changes if you are trying to cancel)! '
+                'You can push with the following commands:\n'
                 '    git push origin {branch}:{branch}\n'
                 '    git push origin "{tag}"\n',
                 branch=branch_name,
-                tag=tag,
+                tag=release_version,
             )
         else:
             _print_output(
@@ -996,7 +997,8 @@ def _post_rollback(current_version, rollback_to_version):
         plugin.post_rollback(ROOT_DIRECTORY, current_version, rollback_to_version)
 
 
-def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None, use_pull_request=False, use_tag=True):
+def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None,
+                                 use_pull_request=False, use_tag=True):
     global MODULE_NAME, MODULE_DISPLAY_NAME, RELEASE_MESSAGE_TEMPLATE, VERSION_FILENAME, CHANGELOG_FILENAME
     global ROOT_DIRECTORY, RELEASE_PLUGINS, PARAMETERS_CONFIGURED, VERSION_FILE_IS_TXT
     global USE_PULL_REQUEST, USE_TAG
