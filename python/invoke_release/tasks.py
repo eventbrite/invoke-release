@@ -1187,7 +1187,7 @@ def release(_, verbose=False, no_stash=False):
 
         cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
 
-        instruction = _prompt('The release has not yet been committed. Are you ready to commit the it? (Y/n):').lower()
+        instruction = _prompt('The release has not yet been committed. Are you ready to commit it? (Y/n):').lower()
         if instruction and instruction != INSTRUCTION_YES:
             raise ReleaseExit()
 
