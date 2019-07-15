@@ -608,7 +608,12 @@ def _push_release_changes(release_version, branch_name, verbose):
     elif push == INSTRUCTION_ROLLBACK:
         _standard_output('Rolling back local release commit and tag...')
 
-        _delete_last_commit(verbose)
+        if USE_PULL_REQUEST:
+            _checkout_branch(verbose, BRANCH_MASTER)
+            _delete_branch(verbose, branch_name)
+        else:
+            _delete_last_commit(verbose)
+
         if USE_TAG:
             _delete_local_tag(tag, verbose)
 
@@ -700,6 +705,18 @@ def _checkout_branch(verbose, branch_name):
     )
 
     _verbose_output(verbose, 'Done checking out branch {}.', branch_name)
+
+
+def _delete_branch(verbose, branch_name):
+    _verbose_output(verbose, 'Deleting branch {branch}...', branch=branch_name)
+
+    subprocess.check_call(
+        ['git', 'branch', '-D', branch_name],
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+    )
+
+    _verbose_output(verbose, 'Done deleting branch {}.', branch_name)
 
 
 def _create_branch_from_tag(verbose, tag_name, branch_name):
