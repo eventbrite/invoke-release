@@ -1260,7 +1260,8 @@ def release(_, verbose=False, no_stash=False):
         _pre_commit(__version__, release_version)
 
         if USE_PULL_REQUEST:
-            branch_name = 'invoke-release-{}'.format(release_version)
+            current_branch_name = _get_branch_name(verbose)
+            branch_name = 'invoke-release-{}-{}'.format(current_branch_name, release_version)
             _create_branch(verbose, branch_name)
         _commit_release_changes(release_version, cl_message, verbose)
 
