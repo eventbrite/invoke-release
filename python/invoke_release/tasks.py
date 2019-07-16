@@ -1172,7 +1172,7 @@ def release(_, verbose=False, no_stash=False):
     version_regular_expression = RE_VERSION
 
     branch_name = _get_branch_name(verbose)
-    if branch_name != BRANCH_MASTER and not USE_PULL_REQUEST:
+    if branch_name != BRANCH_MASTER:
         if not RE_VERSION_BRANCH_MAJOR.match(branch_name) and not RE_VERSION_BRANCH_MINOR.match(branch_name):
             _error_output(
                 'You are currently on branch "{}" instead of "master." You should only release from master or version '
