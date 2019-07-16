@@ -1272,9 +1272,14 @@ def release(_, verbose=False, no_stash=False):
 
         if USE_PULL_REQUEST:
             _checkout_branch(verbose, BRANCH_MASTER)
+
         _post_release(__version__, release_version, pushed_or_rolled_back)
 
-        _standard_output('Release process is complete.')
+        if USE_PULL_REQUEST:
+            _standard_output('You\'re almost done! The release process will be complete when you create '
+                             'a pull request and it is merged.')
+        else:
+            _standard_output('Release process is complete.')
     except ReleaseFailure as e:
         _error_output(e.args[0])
     except subprocess.CalledProcessError as e:
