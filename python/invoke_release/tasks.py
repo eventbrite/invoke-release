@@ -1261,7 +1261,7 @@ def release(_, verbose=False, no_stash=False):
     if branch_name != BRANCH_MASTER:
         if not RE_VERSION_BRANCH_MAJOR.match(branch_name) and not RE_VERSION_BRANCH_MINOR.match(branch_name):
             _error_output(
-                'You are currently on branch "{}" instead of "master." You should only release from master or version '
+                'You are currently on branch "{}" instead of "master." You must only release from master or version '
                 'branches, and this does not appear to be a version branch (must match \\d+\\.x\\.x or \\d+.\\d+\\.x). '
                 '\nCanceling release!',
                 branch_name,
