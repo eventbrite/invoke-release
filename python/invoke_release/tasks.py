@@ -1045,6 +1045,36 @@ def _post_rollback(current_version, rollback_to_version):
         plugin.post_rollback(ROOT_DIRECTORY, current_version, rollback_to_version)
 
 
+def _get_version_to_bump(changelog_message):
+    major_commit_present = None
+    minor_commit_present = None
+    patch_commit_present = None
+
+    for line in changelog_message:
+        if '[MAJOR]' in line:
+            major_commit_present = True
+        if '[MINOR]' in line:
+            minor_commit_present = True
+        if '[PATCH]' in line:
+            patch_commit_present = True
+
+    version = 'PATCH' if patch_commit_present else None
+    version = 'MINOR' if minor_commit_present else version
+    version = 'MAJOR' if major_commit_present else version
+    return version
+
+
+def _suggest_version(current_version, version_to_bump):
+    if version_to_bump == 'PATCH':
+        suggested_version = (current_version[0], current_version[1], current_version[2] + 1)
+    if version_to_bump == 'MINOR':
+        suggested_version = (current_version[0], current_version[1] + 1, 0)
+    if version_to_bump == 'MAJOR':
+        suggested_version = (current_version[0] + 1, 0, 0)
+
+    return '.'.join(map(str, suggested_version)) if suggested_version else ''
+
+
 def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None,
                                  use_pull_request=False, use_tag=True):
     global MODULE_NAME, MODULE_DISPLAY_NAME, RELEASE_MESSAGE_TEMPLATE, VERSION_FILENAME, CHANGELOG_FILENAME
@@ -1293,7 +1323,24 @@ def release(_, verbose=False, no_stash=False):
         _standard_output('Releasing {}...', MODULE_DISPLAY_NAME)
         _standard_output('Current version: {}', __version__)
 
-        release_version = _prompt('Enter a new version (or "exit"):').lower()
+        cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
+        version_according_to_cl_message = _get_version_to_bump(cl_message)
+        suggested_version = _suggest_version(
+            tuple(map(int, __version__.split('.')[:3])),
+            version_according_to_cl_message,
+        )
+
+        if suggested_version:
+            instruction = _prompt(
+               'According to the CHANGELOG message the next version should be `{}`. '
+               'Do you want to proceed with the suggested version? (y/N)'.format(suggested_version)
+            ).lower()
+
+        if instruction and instruction == INSTRUCTION_YES:
+            release_version = suggested_version
+        else:
+            release_version = _prompt('Enter a new version (or "exit"):').lower()
+
         if not release_version or release_version == INSTRUCTION_EXIT:
             raise ReleaseExit()
 
@@ -1331,8 +1378,6 @@ def release(_, verbose=False, no_stash=False):
             raise ReleaseFailure(
                 'Tag {} already exists locally or remotely (or both). Cannot create version.'.format(release_version),
             )
-
-        cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
 
         instruction = _prompt('The release has not yet been committed. Are you ready to commit it? (Y/n):').lower()
         if instruction and instruction != INSTRUCTION_YES:
