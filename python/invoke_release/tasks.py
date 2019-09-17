@@ -35,6 +35,10 @@ MODULE_DISPLAY_NAME = '[unknown]'
 USE_PULL_REQUEST = False
 USE_TAG = True
 
+MAJOR_TAG = '[MAJOR]'
+MINOR_TAG = '[MINOR]'
+PATCH_TAG = '[PATCH]'
+
 RELEASE_PLUGINS = []
 
 ROOT_DIRECTORY = ''
@@ -1050,26 +1054,34 @@ def _get_version_to_bump(changelog_message):
     minor_commit_present = None
     patch_commit_present = None
 
-    for line in changelog_message:
-        if '[MAJOR]' in line:
-            major_commit_present = True
-        if '[MINOR]' in line:
-            minor_commit_present = True
-        if '[PATCH]' in line:
-            patch_commit_present = True
+    if all(
+        MAJOR_TAG in line or
+        MINOR_TAG in line or
+        PATCH_TAG in line
+        for line in changelog_message
+    ):
+        for line in changelog_message:
+            if MAJOR_TAG in line:
+                major_commit_present = True
+            if MINOR_TAG in line:
+                minor_commit_present = True
+            if PATCH_TAG in line:
+                patch_commit_present = True
 
-    version = 'PATCH' if patch_commit_present else None
-    version = 'MINOR' if minor_commit_present else version
-    version = 'MAJOR' if major_commit_present else version
-    return version
+        version = PATCH_TAG if patch_commit_present else None
+        version = MINOR_TAG if minor_commit_present else version
+        version = MAJOR_TAG if major_commit_present else version
+        return version
 
 
 def _suggest_version(current_version, version_to_bump):
-    if version_to_bump == 'PATCH':
+    suggested_version = None
+
+    if version_to_bump == PATCH_TAG:
         suggested_version = (current_version[0], current_version[1], current_version[2] + 1)
-    if version_to_bump == 'MINOR':
+    if version_to_bump == MINOR_TAG:
         suggested_version = (current_version[0], current_version[1] + 1, 0)
-    if version_to_bump == 'MAJOR':
+    if version_to_bump == MAJOR_TAG:
         suggested_version = (current_version[0] + 1, 0, 0)
 
     return '.'.join(map(str, suggested_version)) if suggested_version else ''
@@ -1330,6 +1342,7 @@ def release(_, verbose=False, no_stash=False):
             version_according_to_cl_message,
         )
 
+        instruction = None
         if suggested_version:
             instruction = _prompt(
                'According to the CHANGELOG message the next version should be `{}`. '
