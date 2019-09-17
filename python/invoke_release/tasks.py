@@ -1071,18 +1071,43 @@ def _get_version_to_bump(changelog_message):
         version = PATCH_TAG if patch_commit_present else None
         version = MINOR_TAG if minor_commit_present else version
         version = MAJOR_TAG if major_commit_present else version
+
         return version
 
 
+def _bump_major_version(current_version):
+    return (current_version[0] + 1, 0, 0)
+
+
+def _bump_minor_version(current_version):
+    return (current_version[0], current_version[1] + 1, 0)
+
+
+def _bump_patch_version(current_version):
+    return (current_version[0], current_version[1], current_version[2] + 1)
+
+
 def _suggest_version(current_version, version_to_bump):
+    current_version = tuple(
+        map(
+            int,
+            current_version.split('-')[0].split('+')[0].split('.')[:3]
+        )
+    )
     suggested_version = None
 
     if version_to_bump == PATCH_TAG:
-        suggested_version = (current_version[0], current_version[1], current_version[2] + 1)
+        suggested_version = _bump_patch_version(current_version)
     if version_to_bump == MINOR_TAG:
-        suggested_version = (current_version[0], current_version[1] + 1, 0)
+        suggested_version = _bump_minor_version(current_version)
     if version_to_bump == MAJOR_TAG:
-        suggested_version = (current_version[0] + 1, 0, 0)
+        if current_version[0] == 0:
+            # For MAJOR version zero, recommend to bump a MINOR version instead
+            # since going for version 1.x.x should be a conscious decision and
+            # suggestion wouldn't be necessary.
+            suggested_version = _bump_minor_version(current_version)
+        else:
+            suggested_version = _bump_major_version(current_version)
 
     return '.'.join(map(str, suggested_version)) if suggested_version else ''
 
@@ -1338,14 +1363,14 @@ def release(_, verbose=False, no_stash=False):
         cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
         version_according_to_cl_message = _get_version_to_bump(cl_message)
         suggested_version = _suggest_version(
-            tuple(map(int, __version__.split('.')[:3])),
+            __version__,
             version_according_to_cl_message,
         )
 
         instruction = None
         if suggested_version:
             instruction = _prompt(
-               'According to the CHANGELOG message the next version should be `{}`. '
+               'According to the changelog message the next version should be `{}`. '
                'Do you want to proceed with the suggested version? (y/N)'.format(suggested_version)
             ).lower()
 
