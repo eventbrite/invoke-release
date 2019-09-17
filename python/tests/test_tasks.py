@@ -88,3 +88,11 @@ class TestTasks(TestCase):
         suggested_version = tasks._suggest_version(current_version, tasks.PATCH_TAG)
 
         assert suggested_version == '0.50.2'
+
+    def test_suggest_version_returns_none_if_no_version_to_bump_is_provided(self):
+
+        current_version = '2.50.1'
+
+        suggested_version = tasks._suggest_version(current_version, None)
+
+        assert suggested_version is None

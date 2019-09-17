@@ -1109,7 +1109,7 @@ def _suggest_version(current_version, version_to_bump):
         else:
             suggested_version = _bump_major_version(current_version)
 
-    return '.'.join(map(str, suggested_version)) if suggested_version else ''
+    return '.'.join(map(str, suggested_version)) if suggested_version else None
 
 
 def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None,
