@@ -38,6 +38,17 @@ class TestTasks(TestCase):
 
         assert version_to_bump == tasks.MINOR_TAG
 
+    def test_get_version_to_bump_returns_version_only_if_all_commits_start_with_a_tag(self):
+
+        changelog_message = [
+            '[MINOR] A minor-commit message.\n',
+            'A commit message [PATCH] with a tag in between.\n',
+        ]
+
+        version_to_bump = tasks._get_version_to_bump(changelog_message)
+
+        assert version_to_bump is None
+
     def test_get_version_to_bump_returns_none_if_commit_does_not_have_tag(self):
 
         changelog_message = [

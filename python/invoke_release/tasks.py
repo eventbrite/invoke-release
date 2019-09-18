@@ -1054,25 +1054,23 @@ def _get_version_to_bump(changelog_message):
     minor_commit_present = None
     patch_commit_present = None
 
-    if all(
-        MAJOR_TAG in line or
-        MINOR_TAG in line or
-        PATCH_TAG in line
-        for line in changelog_message
-    ):
-        for line in changelog_message:
-            if MAJOR_TAG in line:
-                major_commit_present = True
-            if MINOR_TAG in line:
-                minor_commit_present = True
-            if PATCH_TAG in line:
-                patch_commit_present = True
+    for line in changelog_message:
+        if line.startswith(MAJOR_TAG):
+            major_commit_present = True
+        elif line.startswith(MINOR_TAG):
+            minor_commit_present = True
+        elif line.startswith(PATCH_TAG):
+            patch_commit_present = True
+        else:
+            # If a line in the changelog message doesn't start with a version
+            # tag, suggest nothing.
+            return None
 
-        version = PATCH_TAG if patch_commit_present else None
-        version = MINOR_TAG if minor_commit_present else version
-        version = MAJOR_TAG if major_commit_present else version
+    version = PATCH_TAG if patch_commit_present else None
+    version = MINOR_TAG if minor_commit_present else version
+    version = MAJOR_TAG if major_commit_present else version
 
-        return version
+    return version
 
 
 def _bump_major_version(current_version):
@@ -1361,11 +1359,7 @@ def release(_, verbose=False, no_stash=False):
         _standard_output('Current version: {}', __version__)
 
         cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
-        version_according_to_cl_message = _get_version_to_bump(cl_message)
-        suggested_version = _suggest_version(
-            __version__,
-            version_according_to_cl_message,
-        )
+        suggested_version = _suggest_version(__version__, _get_version_to_bump(cl_message))
 
         instruction = None
         if suggested_version:
