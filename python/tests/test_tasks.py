@@ -19,9 +19,9 @@ class TestTasks(TestCase):
     def test_get_version_to_bump_decides_correctly_when_different_multiple_commits(self):
 
         changelog_message = [
-            '[PATCH] A patch-commit message.\n',
-            '[MINOR] A minor-commit message.\n',
-            '[MAJOR] A major-commit message.\n',
+            '- [PATCH] A patch-commit message.\n',
+            '- [MINOR] A minor-commit message.\n',
+            '- [MAJOR] A major-commit message.\n',
         ]
 
         version_to_bump = tasks._get_version_to_bump(changelog_message)
@@ -31,7 +31,7 @@ class TestTasks(TestCase):
     def test_get_version_to_bump_decides_correctly_when_single_commit(self):
 
         changelog_message = [
-            '[MINOR] A minor-commit message.\n',
+            '- [MINOR] A minor-commit message.\n',
         ]
 
         version_to_bump = tasks._get_version_to_bump(changelog_message)
@@ -41,7 +41,7 @@ class TestTasks(TestCase):
     def test_get_version_to_bump_returns_version_only_if_all_commits_start_with_a_tag(self):
 
         changelog_message = [
-            '[MINOR] A minor-commit message.\n',
+            '- [MINOR] A minor-commit message.\n',
             'A commit message [PATCH] with a tag in between.\n',
         ]
 
@@ -52,7 +52,7 @@ class TestTasks(TestCase):
     def test_get_version_to_bump_returns_none_if_commit_does_not_have_tag(self):
 
         changelog_message = [
-            '[MINOR] A minor-commit message.\n',
+            '- [MINOR] A minor-commit message.\n',
             'A commit message with no tag.\n',
         ]
 

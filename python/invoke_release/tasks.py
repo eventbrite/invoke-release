@@ -1055,11 +1055,11 @@ def _get_version_to_bump(changelog_message):
     patch_commit_present = None
 
     for line in changelog_message:
-        if line.startswith(MAJOR_TAG):
+        if line.startswith('- ' + MAJOR_TAG):
             major_commit_present = True
-        elif line.startswith(MINOR_TAG):
+        elif line.startswith('- ' + MINOR_TAG):
             minor_commit_present = True
-        elif line.startswith(PATCH_TAG):
+        elif line.startswith('- ' + PATCH_TAG):
             patch_commit_present = True
         else:
             # If a line in the changelog message doesn't start with a version
