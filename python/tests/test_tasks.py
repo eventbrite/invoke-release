@@ -16,7 +16,7 @@ class TestTasks(TestCase):
         assert tasks._case_sensitive_regular_file_exists(__file__.upper()) is False
         assert tasks._case_sensitive_regular_file_exists(__file__ + '.bogus') is False
 
-    def test_get_version_to_bump_decides_correctly_when_different_multiple_commits(self):
+    def test_get_version_element_to_bump_if_any_chooses_major_version_if_a_major_commit_is_present(self):
 
         changelog_message = [
             '- [PATCH] A patch-commit message.\n',
@@ -24,79 +24,79 @@ class TestTasks(TestCase):
             '- [MAJOR] A major-commit message.\n',
         ]
 
-        version_to_bump = tasks._get_version_to_bump(changelog_message)
+        version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_to_bump == tasks.MAJOR_TAG
+        assert version_element_to_bump == tasks.VersionTag.MAJOR_PREFIX
 
-    def test_get_version_to_bump_decides_correctly_when_single_commit(self):
+    def test_get_version_element_to_bump_if_any_chooses_minor_if_only_a_minor_commit_is_present(self):
 
         changelog_message = [
             '- [MINOR] A minor-commit message.\n',
         ]
 
-        version_to_bump = tasks._get_version_to_bump(changelog_message)
+        version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_to_bump == tasks.MINOR_TAG
+        assert version_element_to_bump == tasks.VersionTag.MINOR_PREFIX
 
-    def test_get_version_to_bump_returns_version_only_if_all_commits_start_with_a_tag(self):
+    def test_get_version_element_to_bump_if_any_returns_none_if_a_commit_doesnt_have_tag_and_there_is_no_major(self):
 
         changelog_message = [
             '- [MINOR] A minor-commit message.\n',
             'A commit message [PATCH] with a tag in between.\n',
         ]
 
-        version_to_bump = tasks._get_version_to_bump(changelog_message)
+        version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_to_bump is None
+        assert version_element_to_bump is None
 
-    def test_get_version_to_bump_returns_none_if_commit_does_not_have_tag(self):
+    def test_get_version_element_to_bump_if_any_returns_major_if_commit_does_not_have_tag_but_there_is_a_major(self):
 
         changelog_message = [
-            '- [MINOR] A minor-commit message.\n',
             'A commit message with no tag.\n',
+            '- [MAJOR] A minor-commit message.\n',
         ]
 
-        version_to_bump = tasks._get_version_to_bump(changelog_message)
+        version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_to_bump is None
+        assert version_element_to_bump == tasks.VersionTag.MAJOR_PREFIX
 
-    def test_suggest_version_is_correct_for_a_normal_version(self):
+    def test_suggest_version_suggests_a_patch_bump_for_patch_tag(self):
 
         current_version = '1.2.3'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.PATCH_TAG)
+        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.PATCH_PREFIX)
 
         assert suggested_version == '1.2.4'
 
-    def test_suggest_version_is_correct_for_a_version_with_metadata(self):
+    def test_suggest_version_suggests_a_minor_bump_successfully_if_metadata_is_present_for_minor_tag(self):
 
         current_version = '1.2.3+meta.data'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.MINOR_TAG)
+        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MINOR_PREFIX)
 
         assert suggested_version == '1.3.0'
 
-    def test_suggest_version_is_correct_for_a_version_with_pre_release_and_metadata(self):
+    def test_suggest_version_suggests_a_major_bump_if_metadata_and_prerelease_info_is_present_for_major_Tag(self):
 
         current_version = '1.2.3-pre.release+meta.data'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.MAJOR_TAG)
+        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MAJOR_PREFIX)
 
         assert suggested_version == '2.0.0'
 
-    def test_suggest_version_is_correct_for_major_version_zero_and_major_bump(self):
+    def test_suggest_version_suggests_minor_bump_for_major_version_zero_and_major_tag(self):
 
         current_version = '0.50.1'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.MAJOR_TAG)
+        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MAJOR_PREFIX)
 
         assert suggested_version == '0.51.0'
 
-    def test_suggest_version_is_correct_for_major_version_zero_and_patch_bump(self):
+    def test_suggest_version_suggests_patch_bump_for_major_version_zero_and_patch_bump(self):
 
         current_version = '0.50.1'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.PATCH_TAG)
+        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.PATCH_PREFIX)
 
         assert suggested_version == '0.50.2'
 

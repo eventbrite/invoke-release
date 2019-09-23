@@ -2,12 +2,13 @@ from __future__ import absolute_import, unicode_literals
 
 import codecs
 import datetime
+from enum import Enum
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
-import shlex
 from distutils.version import LooseVersion
 
 from invoke import task
@@ -34,10 +35,6 @@ MODULE_NAME = 'unknown'
 MODULE_DISPLAY_NAME = '[unknown]'
 USE_PULL_REQUEST = False
 USE_TAG = True
-
-MAJOR_TAG = '[MAJOR]'
-MINOR_TAG = '[MINOR]'
-PATCH_TAG = '[PATCH]'
 
 RELEASE_PLUGINS = []
 
@@ -118,6 +115,12 @@ class ReleaseExit(Exception):
     """
     Control-flow exception raised to cancel a release before changes are made.
     """
+
+
+class VersionTag(Enum):
+    MAJOR_PREFIX = '- [MAJOR]'
+    MINOR_PREFIX = '- [MINOR]'
+    PATCH_PREFIX = '- [PATCH]'
 
 
 def _print_output(color, message, *args, **kwargs):
@@ -1049,65 +1052,58 @@ def _post_rollback(current_version, rollback_to_version):
         plugin.post_rollback(ROOT_DIRECTORY, current_version, rollback_to_version)
 
 
-def _get_version_to_bump(changelog_message):
-    major_commit_present = None
-    minor_commit_present = None
+def _get_version_element_to_bump_if_any(changelog_message):
+    untagged_commit_present = None
     patch_commit_present = None
+    minor_commit_present = None
 
     for line in changelog_message:
-        if line.startswith('- ' + MAJOR_TAG):
-            major_commit_present = True
-        elif line.startswith('- ' + MINOR_TAG):
+        if line.startswith(VersionTag.MAJOR_PREFIX.value):
+            return VersionTag.MAJOR_PREFIX
+        if line.startswith(VersionTag.MINOR_PREFIX.value):
             minor_commit_present = True
-        elif line.startswith('- ' + PATCH_TAG):
+        elif line.startswith(VersionTag.PATCH_PREFIX.value):
             patch_commit_present = True
         else:
-            # If a line in the changelog message doesn't start with a version
-            # tag, suggest nothing.
-            return None
+            untagged_commit_present = True
 
-    version = PATCH_TAG if patch_commit_present else None
-    version = MINOR_TAG if minor_commit_present else version
-    version = MAJOR_TAG if major_commit_present else version
+    version = VersionTag.PATCH_PREFIX if patch_commit_present else None
+    version = VersionTag.MINOR_PREFIX if minor_commit_present else version
 
-    return version
+    return version if not untagged_commit_present else None
 
 
-def _bump_major_version(current_version):
-    return (current_version[0] + 1, 0, 0)
+def _bump_version_according_to_tag(current_version, version_element_to_bump):
+
+    if version_element_to_bump == VersionTag.PATCH_PREFIX:
+        return (current_version[0], current_version[1], current_version[2] + 1)
+    if version_element_to_bump == VersionTag.MINOR_PREFIX:
+        return (current_version[0], current_version[1] + 1, 0)
+    if version_element_to_bump == VersionTag.MAJOR_PREFIX:
+        if current_version[0] == 0:
+            # For MAJOR version zero, recommend to bump a MINOR version instead since going for version 1.x.x should be
+            # a conscious decision and suggestion wouldn't be necessary.
+            return (current_version[0], current_version[1] + 1, 0)
+        else:
+            return (current_version[0] + 1, 0, 0)
+
+    return ''
 
 
-def _bump_minor_version(current_version):
-    return (current_version[0], current_version[1] + 1, 0)
-
-
-def _bump_patch_version(current_version):
-    return (current_version[0], current_version[1], current_version[2] + 1)
-
-
-def _suggest_version(current_version, version_to_bump):
+def _suggest_version(current_version, version_element_to_bump):
     current_version = tuple(
         map(
             int,
             current_version.split('-')[0].split('+')[0].split('.')[:3]
         )
     )
-    suggested_version = None
 
-    if version_to_bump == PATCH_TAG:
-        suggested_version = _bump_patch_version(current_version)
-    if version_to_bump == MINOR_TAG:
-        suggested_version = _bump_minor_version(current_version)
-    if version_to_bump == MAJOR_TAG:
-        if current_version[0] == 0:
-            # For MAJOR version zero, recommend to bump a MINOR version instead
-            # since going for version 1.x.x should be a conscious decision and
-            # suggestion wouldn't be necessary.
-            suggested_version = _bump_minor_version(current_version)
-        else:
-            suggested_version = _bump_major_version(current_version)
-
-    return '.'.join(map(str, suggested_version)) if suggested_version else None
+    return '.'.join(
+        map(
+            str,
+            _bump_version_according_to_tag(current_version, version_element_to_bump)
+        )
+    ) or None
 
 
 def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None,
@@ -1359,14 +1355,14 @@ def release(_, verbose=False, no_stash=False):
         _standard_output('Current version: {}', __version__)
 
         cl_header, cl_message, cl_footer = _prompt_for_changelog(verbose)
-        suggested_version = _suggest_version(__version__, _get_version_to_bump(cl_message))
+        suggested_version = _suggest_version(__version__, _get_version_element_to_bump_if_any(cl_message))
 
         instruction = None
         if suggested_version:
             instruction = _prompt(
                'According to the changelog message the next version should be `{}`. '
-               'Do you want to proceed with the suggested version? (y/N)'.format(suggested_version)
-            ).lower()
+               'Do you want to proceed with the suggested version? (Y/n)'.format(suggested_version)
+            ).lower() or INSTRUCTION_YES
 
         if instruction and instruction == INSTRUCTION_YES:
             release_version = suggested_version
