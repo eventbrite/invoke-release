@@ -1196,7 +1196,22 @@ def branch(_, verbose=False, no_stash=False):
                     'Creating branch, and pushing to remote.',
                     branch=new_branch,
                 )
-                _create_branch_from_tag(verbose, branch_version, new_branch)
+
+                subprocess.check_call(
+                    ['git', 'fetch'],
+                    stdout=sys.stdout,
+                    stderr=sys.stderr,
+                )
+
+                try:
+                    subprocess.check_call(
+                        ['git','checkout', branch_version],
+                        stdout=sys.stdout,
+                        stderr=sys.stderr,
+                    )
+                except Exception:
+                    _create_branch_from_tag(verbose, branch_version, new_branch)
+
                 _push_branch(verbose, new_branch)
 
             cherry_pick_branch_suffix = _prompt(
