@@ -26,7 +26,7 @@ class TestTasks(TestCase):
 
         version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_element_to_bump == tasks.VersionTag.MAJOR_PREFIX
+        assert version_element_to_bump == tasks.MAJOR_VERSION_PREFIX
 
     def test_get_version_element_to_bump_if_any_chooses_minor_if_only_a_minor_commit_is_present(self):
 
@@ -36,7 +36,7 @@ class TestTasks(TestCase):
 
         version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_element_to_bump == tasks.VersionTag.MINOR_PREFIX
+        assert version_element_to_bump == tasks.MINOR_VERSION_PREFIX
 
     def test_get_version_element_to_bump_if_any_returns_none_if_a_commit_doesnt_have_tag_and_there_is_no_major(self):
 
@@ -58,13 +58,13 @@ class TestTasks(TestCase):
 
         version_element_to_bump = tasks._get_version_element_to_bump_if_any(changelog_message)
 
-        assert version_element_to_bump == tasks.VersionTag.MAJOR_PREFIX
+        assert version_element_to_bump == tasks.MAJOR_VERSION_PREFIX
 
     def test_suggest_version_suggests_a_patch_bump_for_patch_tag(self):
 
         current_version = '1.2.3'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.PATCH_PREFIX)
+        suggested_version = tasks._suggest_version(current_version, tasks.PATCH_VERSION_PREFIX)
 
         assert suggested_version == '1.2.4'
 
@@ -72,7 +72,7 @@ class TestTasks(TestCase):
 
         current_version = '1.2.3+meta.data'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MINOR_PREFIX)
+        suggested_version = tasks._suggest_version(current_version, tasks.MINOR_VERSION_PREFIX)
 
         assert suggested_version == '1.3.0'
 
@@ -80,7 +80,7 @@ class TestTasks(TestCase):
 
         current_version = '1.2.3-pre.release+meta.data'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MAJOR_PREFIX)
+        suggested_version = tasks._suggest_version(current_version, tasks.MAJOR_VERSION_PREFIX)
 
         assert suggested_version == '2.0.0'
 
@@ -88,7 +88,7 @@ class TestTasks(TestCase):
 
         current_version = '0.50.1'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.MAJOR_PREFIX)
+        suggested_version = tasks._suggest_version(current_version, tasks.MAJOR_VERSION_PREFIX)
 
         assert suggested_version == '0.51.0'
 
@@ -96,7 +96,7 @@ class TestTasks(TestCase):
 
         current_version = '0.50.1'
 
-        suggested_version = tasks._suggest_version(current_version, tasks.VersionTag.PATCH_PREFIX)
+        suggested_version = tasks._suggest_version(current_version, tasks.PATCH_VERSION_PREFIX)
 
         assert suggested_version == '0.50.2'
 

@@ -2,7 +2,6 @@ from __future__ import absolute_import, unicode_literals
 
 import codecs
 import datetime
-from enum import Enum
 import os
 import re
 import shlex
@@ -82,6 +81,10 @@ INSTRUCTION_EXIT = 'exit'
 INSTRUCTION_ROLLBACK = 'rollback'
 INSTRUCTION_MAJOR = 'major'
 
+MAJOR_VERSION_PREFIX = '- [MAJOR]'
+MINOR_VERSION_PREFIX = '- [MINOR]'
+PATCH_VERSION_PREFIX = '- [PATCH]'
+
 
 class ErrorStreamWrapper(object):
     def __init__(self, wrapped):
@@ -115,12 +118,6 @@ class ReleaseExit(Exception):
     """
     Control-flow exception raised to cancel a release before changes are made.
     """
-
-
-class VersionTag(Enum):
-    MAJOR_PREFIX = '- [MAJOR]'
-    MINOR_PREFIX = '- [MINOR]'
-    PATCH_PREFIX = '- [PATCH]'
 
 
 def _print_output(color, message, *args, **kwargs):
@@ -1053,33 +1050,33 @@ def _post_rollback(current_version, rollback_to_version):
 
 
 def _get_version_element_to_bump_if_any(changelog_message):
-    untagged_commit_present = None
-    patch_commit_present = None
-    minor_commit_present = None
+    untagged_commit_present = False
+    patch_commit_present = False
+    minor_commit_present = False
 
     for line in changelog_message:
-        if line.startswith(VersionTag.MAJOR_PREFIX.value):
-            return VersionTag.MAJOR_PREFIX
-        if line.startswith(VersionTag.MINOR_PREFIX.value):
+        if line.startswith(MAJOR_VERSION_PREFIX):
+            return MAJOR_VERSION_PREFIX
+        if line.startswith(MINOR_VERSION_PREFIX):
             minor_commit_present = True
-        elif line.startswith(VersionTag.PATCH_PREFIX.value):
+        elif line.startswith(PATCH_VERSION_PREFIX):
             patch_commit_present = True
         else:
             untagged_commit_present = True
 
-    version = VersionTag.PATCH_PREFIX if patch_commit_present else None
-    version = VersionTag.MINOR_PREFIX if minor_commit_present else version
+    version = PATCH_VERSION_PREFIX if patch_commit_present else None
+    version = MINOR_VERSION_PREFIX if minor_commit_present else version
 
     return version if not untagged_commit_present else None
 
 
 def _bump_version_according_to_tag(current_version, version_element_to_bump):
 
-    if version_element_to_bump == VersionTag.PATCH_PREFIX:
+    if version_element_to_bump == PATCH_VERSION_PREFIX:
         return (current_version[0], current_version[1], current_version[2] + 1)
-    if version_element_to_bump == VersionTag.MINOR_PREFIX:
+    if version_element_to_bump == MINOR_VERSION_PREFIX:
         return (current_version[0], current_version[1] + 1, 0)
-    if version_element_to_bump == VersionTag.MAJOR_PREFIX:
+    if version_element_to_bump == MAJOR_VERSION_PREFIX:
         if current_version[0] == 0:
             # For MAJOR version zero, recommend to bump a MINOR version instead since going for version 1.x.x should be
             # a conscious decision and suggestion wouldn't be necessary.
