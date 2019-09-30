@@ -1361,7 +1361,7 @@ def release(_, verbose=False, no_stash=False):
                'Do you want to proceed with the suggested version? (Y/n)'.format(suggested_version)
             ).lower() or INSTRUCTION_YES
 
-        if instruction and instruction == INSTRUCTION_YES:
+        if instruction == INSTRUCTION_YES:
             release_version = suggested_version
         else:
             release_version = _prompt('Enter a new version (or "exit"):').lower()
