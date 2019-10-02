@@ -1188,7 +1188,6 @@ def branch(_, verbose=False, no_stash=False):
             raise ReleaseExit()
 
         new_branch = major_branch if proceed_instruction == INSTRUCTION_MAJOR else minor_branch
-        print('hello ->', new_branch)
         if USE_PULL_REQUEST:
             if _is_branch_on_remote(verbose, new_branch):
                 _standard_output(
