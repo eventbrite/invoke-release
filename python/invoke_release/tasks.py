@@ -707,9 +707,6 @@ def _create_local_tracking_branch(verbose, branch_name):
         'Creating local branch {branch} set up to track remote branch {branch} from \'origin\'...',
         branch=branch_name
     )
-
-    success = True
-
     try:
         subprocess.check_call(
             ['git', 'checkout', '--track', 'origin/{}'.format(branch_name)],
@@ -717,11 +714,16 @@ def _create_local_tracking_branch(verbose, branch_name):
             stderr=sys.stderr,
         )
         _verbose_output(verbose, 'Done creating branch {}.', branch_name)
-    except subprocess.CalledProcessError:
-        _verbose_output(verbose, 'Creating branch {} failed.', branch_name)
-        success = False
-
-    return success
+    except Exception:
+        _standard_output(
+            'Switching to branch -> {branch} ...',
+            branch=branch_name,
+        )
+        subprocess.check_call(
+            ['git', 'checkout', branch_name],
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
 
 
 def _checkout_branch(verbose, branch_name):
@@ -766,18 +768,6 @@ def _is_branch_on_remote(verbose, branch_name):
     )
 
     return on_remote
-
-
-def _create_branch_from_tag(verbose, tag_name, branch_name):
-    _verbose_output(verbose, 'Creating branch {branch} from tag {tag}...', branch=branch_name, tag=tag_name)
-
-    subprocess.check_call(
-        ['git', 'checkout', 'tags/{}'.format(tag_name), '-b', branch_name],
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-    )
-
-    _verbose_output(verbose, 'Done creating branch {}.', branch_name)
 
 
 def _push_branch(verbose, branch_name):
@@ -1044,6 +1034,28 @@ def _post_rollback(current_version, rollback_to_version):
     for plugin in RELEASE_PLUGINS:
         plugin.post_rollback(ROOT_DIRECTORY, current_version, rollback_to_version)
 
+def _create_or_checkout_branch_from_tag(verbose, branch_version, branch_name):
+    try:
+        _standard_output(
+            'Switching to branch: {branch} from tag: {tag}...',
+            branch=branch_name,
+            tag=branch_version,
+        )
+        subprocess.check_call(
+            ['git', 'checkout', branch_name],
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
+    except Exception:
+        _verbose_output(verbose, 'Creating branch {branch} from tag {tag}...', branch=branch_name, tag=branch_version)
+    
+        subprocess.check_call(
+            ['git', 'checkout', 'tags/{}'.format(branch_version), '-b', branch_name],
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
+    
+        _verbose_output(verbose, 'Done creating branch {}.', branch_name)
 
 def configure_release_parameters(module_name, display_name, python_directory=None, plugins=None,
                                  use_pull_request=False, use_tag=True):
@@ -1176,42 +1188,21 @@ def branch(_, verbose=False, no_stash=False):
             raise ReleaseExit()
 
         new_branch = major_branch if proceed_instruction == INSTRUCTION_MAJOR else minor_branch
-
+        print('hello ->', new_branch)
         if USE_PULL_REQUEST:
             if _is_branch_on_remote(verbose, new_branch):
                 _standard_output(
                     'Branch {branch} exists on remote. Creating local tracking branch.',
                     branch=new_branch,
                 )
-                created = _create_local_tracking_branch(verbose, new_branch)
-                if not created:
-                    raise ReleaseFailure(
-                        'Could not create local tracking branch {branch}.\n'
-                        'Does a local branch named {branch} already exists?\n'
-                        'Delete or rename your local branch {branch} and try again.'.format(branch=new_branch),
-                    )
+                _create_local_tracking_branch(verbose, new_branch)
             else:
                 _standard_output(
                     'Branch {branch} does not exist on remote.\n'
                     'Creating branch, and pushing to remote.',
                     branch=new_branch,
                 )
-
-                subprocess.check_call(
-                    ['git', 'fetch'],
-                    stdout=sys.stdout,
-                    stderr=sys.stderr,
-                )
-
-                try:
-                    subprocess.check_call(
-                        ['git','checkout', branch_version],
-                        stdout=sys.stdout,
-                        stderr=sys.stderr,
-                    )
-                except Exception:
-                    _create_branch_from_tag(verbose, branch_version, new_branch)
-
+                _create_or_checkout_branch_from_tag(verbose, branch_version, new_branch)
                 _push_branch(verbose, new_branch)
 
             cherry_pick_branch_suffix = _prompt(
@@ -1229,7 +1220,7 @@ def branch(_, verbose=False, no_stash=False):
                 )
             )
         else:
-            _create_branch_from_tag(verbose, branch_version, new_branch)
+            _create_or_checkout_branch_from_tag(verbose, branch_version, new_branch)
 
             push_instruction = _prompt(
                 'Branch {} created. Would you like to go ahead and push it to remote? (y/N):',
