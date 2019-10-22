@@ -1437,23 +1437,23 @@ def release(_, verbose=False, no_stash=False):
         if USE_PULL_REQUEST:
             if current_branch_name != BRANCH_MASTER:
                 _checkout_branch(verbose, current_branch_name)
+            pr_opened = ''
             try:
                 github_token = os.environ['GITHUB_TOKEN']
             except KeyError:
-                pr_opened = False
-                _standard_output('`GITHUB_TOKEN` environment variable not set. Will not open GitHub PR.')
+                _standard_output('Then environment variable `GITHUB_TOKEN` is not set. Will not open GitHub PR.')
             else:
                 pr_opened = open_pull_request(branch_name, current_branch_name, release_version, github_token)
         _post_release(__version__, release_version, pushed_or_rolled_back)
 
         if USE_PULL_REQUEST:
-            if not pr_opened:
+            if pr_opened:
+                _standard_output('GitHub PR created successfully. URL: {}'.format(pr_opened))
+            else:
                 _standard_output(
                     "You're almost done! The release process will be complete when you create "
                     "a pull request and it is merged."
                 )
-            else:
-                _standard_output('GitHub PR created successfully.')
         else:
             _standard_output('Release process is complete.')
     except ReleaseFailure as e:
@@ -1602,7 +1602,7 @@ def open_pull_request(branch_name, current_branch_name, version_to_release, gith
         )
     )
     repo = (remote.split(':')[1].split('.')[0])
-    url = 'http://api.github.com/repos/{}/pulls'.format(repo)
+    url = 'https://api.github.com/repos/{}/pulls'.format(repo)
 
     values = {
         'title': 'Released version {}'.format(version_to_release),
@@ -1621,7 +1621,6 @@ def open_pull_request(branch_name, current_branch_name, version_to_release, gith
     try:
         req = urllib.request.Request(url, body, headers)
         with closing(urllib.request.urlopen(req)) as f:
-            f.read()
-            return f.status == 200
+            return f.getcode() == 201 and json.loads(f.read().decode('utf-8'))['html_url']
     except Exception:
         _error_output('Could not open Github PR')
