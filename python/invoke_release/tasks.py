@@ -1437,10 +1437,10 @@ def release(_, verbose=False, no_stash=False):
         if USE_PULL_REQUEST:
             if current_branch_name != BRANCH_MASTER:
                 _checkout_branch(verbose, current_branch_name)
-            pr_opened = ''
             try:
                 github_token = os.environ['GITHUB_TOKEN']
             except KeyError:
+                pr_opened = False
                 _standard_output('Then environment variable `GITHUB_TOKEN` is not set. Will not open GitHub PR.')
             else:
                 pr_opened = open_pull_request(branch_name, current_branch_name, release_version, github_token)
@@ -1621,6 +1621,7 @@ def open_pull_request(branch_name, current_branch_name, version_to_release, gith
     try:
         req = urllib.request.Request(url, body, headers)
         with closing(urllib.request.urlopen(req)) as f:
+            # GitHub will always answer with 201 if the PR was `CREATED`.
             return f.getcode() == 201 and json.loads(f.read().decode('utf-8'))['html_url']
     except Exception:
         _error_output('Could not open Github PR')
