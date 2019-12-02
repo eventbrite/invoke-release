@@ -1443,7 +1443,13 @@ def release(_, verbose=False, no_stash=False):
                 pr_opened = False
                 _standard_output('Then environment variable `GITHUB_TOKEN` is not set. Will not open GitHub PR.')
             else:
-                pr_opened = open_pull_request(branch_name, current_branch_name, MODULE_DISPLAY_NAME, release_version, github_token)
+                pr_opened = open_pull_request(
+                    branch_name,
+                    current_branch_name,
+                    MODULE_DISPLAY_NAME,
+                    release_version,
+                    github_token,
+                )
         _post_release(__version__, release_version, pushed_or_rolled_back)
 
         if USE_PULL_REQUEST:
