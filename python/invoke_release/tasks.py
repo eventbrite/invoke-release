@@ -1435,7 +1435,7 @@ def release(_, verbose=False, no_stash=False):
             _tag_branch(release_version, cl_message, verbose)
         pushed_or_rolled_back = _push_release_changes(release_version, branch_name, verbose)
 
-        uses_prs_and_branch_is_pushed = USE_PULL_REQUEST and pushed_or_rolled_back == PUSH_RESULT_PUSHED:
+        uses_prs_and_branch_is_pushed = USE_PULL_REQUEST and pushed_or_rolled_back == PUSH_RESULT_PUSHED
 
         if uses_prs_and_branch_is_pushed:
             if current_branch_name != BRANCH_MASTER:
