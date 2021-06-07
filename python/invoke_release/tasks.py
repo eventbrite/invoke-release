@@ -1366,7 +1366,7 @@ def release(_, verbose=False, no_stash=False):
             return
 
         version_regular_expression = re.compile(
-            r'^' + branch_name.replace('.x', r'.\d+').replace('.', r'\.') + r'([a-zA-Z\d.-]*[a-zA-Z\d]+)?$',
+            r'^' + branch_name.replace('.x', r'.\d+').replace('.', r'\.') + r'([a-zA-Z\d.-+]*[a-zA-Z\d]+)?$',
         )
 
     try:
