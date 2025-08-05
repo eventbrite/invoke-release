@@ -1,9 +1,8 @@
-from __future__ import absolute_import, unicode_literals
-
 import codecs
 from contextlib import closing
 import datetime
 from distutils.version import LooseVersion
+from importlib import reload
 import json
 import os
 from pkg_resources import parse_version
@@ -12,11 +11,9 @@ import shlex
 import subprocess
 import sys
 import tempfile
+import urllib.request
 
 from invoke import task
-import six
-from six import moves
-from six.moves import urllib
 from wheel import archive
 
 RE_CHANGELOG_FILE_HEADER = re.compile(r'^=+$')
@@ -144,10 +141,9 @@ def _standard_output(message, *args, **kwargs):
 def _prompt(message, *args, **kwargs):
     _print_output(COLOR_WHITE, message + ' ', *args, **kwargs)
     # noinspection PyCompatibility
-    response = moves.input()
+    response = input()
     if response:
-        if not isinstance(response, six.text_type):
-            # Input returns a bytestring in Python 2 and a unicode string in Python 3
+        if not isinstance(response, str):
             return response.decode('utf8').strip()
         return response.strip()
     return ''
@@ -329,7 +325,7 @@ def _prompt_for_changelog(verbose):
     if len(built_up_changelog) > 0:
         _verbose_output(verbose, 'Read {} lines of built-up changelog text:', len(built_up_changelog))
         if verbose:
-            _verbose_output(verbose, six.text_type(built_up_changelog))
+            _verbose_output(verbose, str(built_up_changelog))
         _standard_output('There are existing changelog details for this release. You can "edit" the changes, '
                          '"accept" them as-is, delete them and create a "new" changelog message, or "delete" '
                          'them and enter no changelog.')
@@ -1243,8 +1239,8 @@ def branch(_, verbose=False, no_stash=False):
             raise ReleaseFailure('Version number {} not in the list of available tags.'.format(branch_version))
 
         _v = LooseVersion(branch_version)
-        minor_branch = '.'.join(list(map(six.text_type, _v.version[:2])) + ['x'])
-        major_branch = '.'.join(list(map(six.text_type, _v.version[:1])) + ['x', 'x'])
+        minor_branch = '.'.join(list(map(str, _v.version[:2])) + ['x'])
+        major_branch = '.'.join(list(map(str, _v.version[:1])) + ['x', 'x'])
 
         proceed_instruction = _prompt(
             'Using tag {tag}, would you like to create a minor branch for patch versions (branch {minor}, '
@@ -1419,7 +1415,7 @@ def release(_, verbose=False, no_stash=False):
         else:
             version_info = list(map(int, version_info))
         release_version = version_separator.join(
-            filter(None, ['.'.join(map(six.text_type, version_info[:3])), (version_info[3:] or [None])[0]])
+            filter(None, ['.'.join(map(str, version_info[:3])), (version_info[3:] or [None])[0]])
         )  # This must match the code in VERSION_VARIABLE_TEMPLATE at the top of this file
 
         if not (parse_version(release_version) > parse_version(__version__)):
@@ -1587,7 +1583,7 @@ def rollback_release(_, verbose=False, no_stash=False):
 
             version_module = __import__('{}.version'.format(MODULE_NAME), fromlist=[str('__version__')])
             # noinspection PyCompatibility
-            moves.reload_module(version_module)
+            reload(version_module)
             _post_rollback(__version__, version_module.__version__)
 
             _standard_output('Release rollback is complete.')
@@ -1630,7 +1626,7 @@ def wheel(_):
 
 
 def open_pull_request(branch_name, current_branch_name, display_name, version_to_release, github_token):
-    remote = six.text_type(
+    remote = str(
         subprocess.check_output(
             ['git', 'remote', 'get-url', 'origin'],
             stderr=subprocess.STDOUT,

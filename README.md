@@ -21,7 +21,7 @@ This documentation is broken down into five main sections:
 * [Creating and Using Invoke Release Plugins](#creating-and-using-invoke-release-plugins)
   - [`PatternReplaceVersionInFilesPlugin`](#patternreplaceversioninfilesplugin)
 
-Invoke Release has been tested on Python 2.7 and 3.5 and on Mac OS X and Ubuntu. It has not been tested on Windows at
+Invoke Release has been tested on 3.9 and on Mac OS X and Ubuntu. It has not been tested on Windows at
 this time, but pull requests are welcome if issues are found with Windows. It would require a shell-like environment,
 such as [Cygwin](https://www.cygwin.com/), to properly run on Windows operating systems.
 
@@ -62,9 +62,9 @@ properly and that the tools are installed on your machine:
 
 ```
 $ invoke version
-Python 2.7.11 (default, Jun 17 2016, 09:29:41)
-Invoke 0.22.0
-Invoke Release 4.6.0
+Python 3.9.23 (main, Jul 11 2025, 22:37:47)
+Invoke 2.2.0
+Invoke Release 4.7.0
 My Project 2.1.0
 Detected Git branch: master
 Detected version file: /path/to/my/project/module/version.py
@@ -79,7 +79,7 @@ directory and follow the on-screen instructions:
 
 ```
 $ invoke release
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 Releasing My Project...
 Current version: 2.1.0
 Enter a new version (or "exit"): 2.2.0
@@ -95,7 +95,7 @@ then commit (or cherry-pick, as the case may be) your fix, and from which you ca
 
 ```
 $ invoke branch
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 Enter a version tag from which to create a new branch (or "exit"): 2.0.0
 ...
 ```
@@ -148,9 +148,7 @@ not yet installed Invoke Release or if the `invoke` command is not working.
 As a prerequisite, your project's Python root module _must_ have a module named `version.py` with, at least, a
 `__version__` variable defined. This variable must also be imported in the `__init__.py` file of the home module. For
 an example of this, see [`python/invoke_release/version.py`](python/invoke_release/version.py) and
-[`python/invoke_release/__init__.py`](python/invoke_release/__init__.py). If your project is a Python 2 or universal
-project, we _strongly_ recommend putting `from __future__ import unicode_literals` at the top of your `version.py`
-file. For Python 3-only projects, this is not necessary.
+[`python/invoke_release/__init__.py`](python/invoke_release/__init__.py).
 
 Your project must also contain a file named `CHANGELOG.txt`, `CHANGELOG.md`, or `CHANGELOG.rst`. If more than one of
 those files are present, Invoke Release will use the first one found, in that order. In order to work properly, the
@@ -221,7 +219,7 @@ and verify the output. Address any errors that you see.
 $ invoke version
 Python 2.7.11 (default, Jun 17 2016, 09:29:41)
 Invoke 0.22.0
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 PySOA 0.26.1
 Detected Git branch: master
 Detected version file: /path/to/pysoa-project/pysoa/version.py
@@ -238,11 +236,9 @@ file with each release; however, there is an alternative approach you may take. 
 `version.txt` file that contains the raw version string and no other contents. Invoke Release will, instead, update
 the version in that file. This is particularly useful if you have tools that need to read the project version without
 importing the `version` module. If you take this approach, your `version.py` file should have the following exact
-contents (excluding `__future__` for Python 3-only projects):
+contents:
 
 ```python
-from __future__ import unicode_literals
-
 import codecs
 import os
 

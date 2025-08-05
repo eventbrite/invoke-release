@@ -1,5 +1,3 @@
-from __future__ import absolute_import, unicode_literals
-
 from setuptools import (
     find_packages,
     setup,
@@ -11,15 +9,14 @@ sys.path.insert(0, 'python')
 from invoke_release.version import __version__  # noqa: E402
 
 
-# No dependencies to keep the library lightweight
+# Few dependencies to keep the library lightweight
 install_requires = [
-    'invoke~=0.22.0',
-    'six~=1.11.0',
-    'wheel~=0.31.1'
+    'invoke',
+    'wheel~=0.31.1',
 ]
 
 tests_require = [
-    'pytest'
+    'pytest',
 ]
 
 
@@ -44,7 +41,7 @@ releases like so:
     url='https://github.com/eventbrite/invoke-release',
     packages=list(map(str, find_packages(where='python', exclude=['*.tests', '*.tests.*', 'tests.*', 'tests']))),
     package_dir={
-        str(''): str('python'),  # In Python 2, these can't be unicode; in Python 3, they must be
+        '': 'python',
     },
     install_requires=install_requires,
     # Invalid classifier prevents accidental upload to PyPI
@@ -59,12 +56,9 @@ releases like so:
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development',
     ],
+    python_requires='>=3.9',
 )
