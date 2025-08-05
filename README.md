@@ -21,7 +21,7 @@ This documentation is broken down into five main sections:
 * [Creating and Using Invoke Release Plugins](#creating-and-using-invoke-release-plugins)
   - [`PatternReplaceVersionInFilesPlugin`](#patternreplaceversioninfilesplugin)
 
-Invoke Release has been tested on 3.8 and on Mac OS X and Ubuntu. It has not been tested on Windows at
+Invoke Release has been tested on 3.9 and on Mac OS X and Ubuntu. It has not been tested on Windows at
 this time, but pull requests are welcome if issues are found with Windows. It would require a shell-like environment,
 such as [Cygwin](https://www.cygwin.com/), to properly run on Windows operating systems.
 
@@ -62,9 +62,9 @@ properly and that the tools are installed on your machine:
 
 ```
 $ invoke version
-Python 3.8.20 (default, Oct  2 2024, 16:12:59)
-Invoke 2.0.1
-Invoke Release 4.6.0
+Python 3.9.23 (main, Jul 11 2025, 22:37:47)
+Invoke 2.2.0
+Invoke Release 4.7.0
 My Project 2.1.0
 Detected Git branch: master
 Detected version file: /path/to/my/project/module/version.py
@@ -79,7 +79,7 @@ directory and follow the on-screen instructions:
 
 ```
 $ invoke release
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 Releasing My Project...
 Current version: 2.1.0
 Enter a new version (or "exit"): 2.2.0
@@ -95,7 +95,7 @@ then commit (or cherry-pick, as the case may be) your fix, and from which you ca
 
 ```
 $ invoke branch
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 Enter a version tag from which to create a new branch (or "exit"): 2.0.0
 ...
 ```
@@ -219,7 +219,7 @@ and verify the output. Address any errors that you see.
 $ invoke version
 Python 2.7.11 (default, Jun 17 2016, 09:29:41)
 Invoke 0.22.0
-Invoke Release 4.6.0
+Invoke Release 4.7.0
 PySOA 0.26.1
 Detected Git branch: master
 Detected version file: /path/to/pysoa-project/pysoa/version.py

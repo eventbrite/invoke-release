@@ -11,14 +11,12 @@ from invoke_release.version import __version__  # noqa: E402
 
 # Few dependencies to keep the library lightweight
 install_requires = [
-    'invoke~=2.0.1',
+    'invoke',
     'wheel~=0.31.1',
 ]
 
 tests_require = [
-    'pytest<8.1.0',
-    'pluggy<1.6.0',
-    'typing_extensions<4.10',
+    'pytest',
 ]
 
 
@@ -59,8 +57,8 @@ releases like so:
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development',
     ],
-    python_requires='>=3.8',
+    python_requires='>=3.9',
 )
