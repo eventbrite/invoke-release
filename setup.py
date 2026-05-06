@@ -13,9 +13,9 @@ from invoke_release.version import __version__  # noqa: E402
 
 # No dependencies to keep the library lightweight
 install_requires = [
-    'invoke~=0.22.0',
-    'six~=1.11.0',
-    'wheel~=0.31.1'
+    'invoke>=1.0,<3.0',
+    'packaging>=20.0',
+    'wheel>=0.31.1',
 ]
 
 tests_require = [
